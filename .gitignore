@@ -1,0 +1,12 @@
+# Root gitignore
+node_modules/
+.DS_Store
+*.log
+
+# Subfolders
+client/node_modules/
+client/.next/
+client/.env*.local
+server/node_modules/
+server/.env
+server/uploads/
