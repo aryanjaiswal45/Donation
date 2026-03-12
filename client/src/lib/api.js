@@ -19,7 +19,11 @@ async function request(endpoint, options = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const res = await fetch(`${API_BASE}${endpoint}`, {
+    // URL cleanup: ensure no double slashes and correct path joining
+    const baseUrl = API_BASE.replace(/\/+$/, '');
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+    const res = await fetch(`${baseUrl}${cleanEndpoint}`, {
         ...options,
         headers,
     });
