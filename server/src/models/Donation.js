@@ -36,6 +36,10 @@ const donationSchema = new mongoose.Schema(
             type: String,
             default: '',
         },
+        image: {
+            data: Buffer,
+            contentType: String,
+        },
         imageUrl: {
             type: String,
             default: '',

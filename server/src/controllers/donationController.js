@@ -1,4 +1,5 @@
 const donationService = require('../services/donationService');
+const Donation = require('../models/Donation');
 
 exports.createDonation = async (req, res) => {
     try {
@@ -7,8 +8,15 @@ exports.createDonation = async (req, res) => {
             donorId: req.user.id,
         };
 
+        // If an image was uploaded, store its binary data in the donation document
         if (req.file) {
-            donationData.imageUrl = `/uploads/${req.file.filename}`;
+            console.log(`📸 Image received: ${req.file.originalname} (${req.file.size} bytes)`);
+            donationData.image = {
+                data: req.file.buffer,
+                contentType: req.file.mimetype,
+            };
+        } else {
+            console.log('ℹ️ No image uploaded for this donation');
         }
 
         const donation = await donationService.createDonation(donationData);
@@ -35,5 +43,21 @@ exports.updateStatus = async (req, res) => {
         res.status(200).json({ success: true, data: donation });
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+// Serve the image binary for a specific donation
+exports.getDonationImage = async (req, res) => {
+    try {
+        const donation = await Donation.findById(req.params.id).select('image');
+
+        if (!donation || !donation.image || !donation.image.data) {
+            return res.status(404).json({ success: false, message: 'Image not found' });
+        }
+
+        res.set('Content-Type', donation.image.contentType);
+        res.send(donation.image.data);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 };

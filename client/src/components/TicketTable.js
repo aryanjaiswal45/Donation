@@ -55,9 +55,12 @@ export default function TicketTable({ donations, onStatusChange, isAdmin = false
                                 <tr key={d._id} className="hover:bg-slate-50/50 transition">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            {d.imageUrl ? (
+                                            {d.hasImage ? (
                                                 <img
-                                                    src={`${API_HOST}${d.imageUrl}`}
+                                                    src={d.image && d.image.contentType
+                                                        ? `${API_HOST}/api/donations/${d._id}/image`
+                                                        : `${API_HOST}${d.imageUrl}`
+                                                    }
                                                     alt={d.foodName}
                                                     className="w-10 h-10 rounded-lg object-cover"
                                                 />

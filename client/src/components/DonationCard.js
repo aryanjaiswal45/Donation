@@ -10,7 +10,7 @@ export default function DonationCard({ donation }) {
         expiryTime,
         pickupLocation,
         contactNumber,
-        imageUrl,
+        hasImage,
         status,
         createdAt,
         notes,
@@ -20,9 +20,12 @@ export default function DonationCard({ donation }) {
         <div className="donation-card bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-slate-100 group">
             {/* Image */}
             <div className="relative h-48 bg-green-50 overflow-hidden">
-                {imageUrl ? (
+                {hasImage ? (
                     <img
-                        src={`${API_HOST}${imageUrl}`}
+                        src={donation.image && donation.image.contentType
+                            ? `${API_HOST}/api/donations/${donation._id}/image`
+                            : `${API_HOST}${donation.imageUrl}`
+                        }
                         alt={foodName}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

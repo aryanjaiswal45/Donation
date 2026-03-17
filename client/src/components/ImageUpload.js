@@ -1,77 +1,70 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useRef } from 'react';
 
 export default function ImageUpload({ onFileSelect, preview, setPreview }) {
-    const inputRef = useRef(null);
-    const [dragActive, setDragActive] = useState(false);
+    const fileInputRef = useRef(null);
 
-    const handleFile = (file) => {
-        if (file && file.type.startsWith('image/')) {
-            // Revoke old blob URL to prevent memory leak
-            if (preview) {
-                URL.revokeObjectURL(preview);
-            }
-            onFileSelect(file);
-            setPreview(URL.createObjectURL(file));
+    const handleFileChange = (e) => {
+        const selectedFile = e.target.files[0];
+        if (!selectedFile) return;
+
+        // Validate size (5MB max)
+        if (selectedFile.size > 5 * 1024 * 1024) {
+            alert('File size exceeds 5MB limit');
+            return;
         }
+
+        // Validate type
+        if (!selectedFile.type.startsWith('image/')) {
+            alert('Please select an image file');
+            return;
+        }
+
+        onFileSelect(selectedFile);
+
+        // Generate preview
+        const reader = new FileReader();
+        reader.onloadend = () => setPreview(reader.result);
+        reader.readAsDataURL(selectedFile);
     };
 
-    const handleDrop = (e) => {
-        e.preventDefault();
-        setDragActive(false);
-        if (e.dataTransfer.files?.[0]) {
-            handleFile(e.dataTransfer.files[0]);
-        }
+    const handleRemove = () => {
+        onFileSelect(null);
+        setPreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     return (
-        <div
-            className={`food-upload-form relative border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer ${dragActive
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'
-                }`}
-            onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-            onDragLeave={() => setDragActive(false)}
-            onDrop={handleDrop}
-            onClick={() => inputRef.current?.click()}
-        >
-            <input
-                ref={inputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => handleFile(e.target.files?.[0])}
-            />
-
+        <div>
             {preview ? (
-                <div className="relative">
-                    <img
-                        src={preview}
-                        alt="Preview"
-                        className="mx-auto max-h-48 rounded-xl object-cover"
-                    />
+                <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                    <img src={preview} alt="Preview" className="w-full h-48 object-cover" />
                     <button
                         type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onFileSelect(null);
-                            setPreview(null);
-                        }}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm hover:bg-red-600 transition"
+                        onClick={handleRemove}
+                        className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold hover:bg-red-600 transition-colors shadow-lg"
                     >
                         ✕
                     </button>
                 </div>
             ) : (
-                <>
-                    <div className="text-4xl mb-3">📷</div>
-                    <p className="text-sm font-medium text-slate-600">
-                        Drag & drop an image or <span className="text-blue-600">browse</span>
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">JPEG, PNG, WebP up to 5MB</p>
-                </>
+                <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex flex-col items-center justify-center h-48 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
+                >
+                    <span className="text-3xl mb-2">📷</span>
+                    <p className="text-sm font-medium text-slate-500">Click to upload food image</p>
+                    <p className="text-xs text-slate-400 mt-1">JPG, PNG, WEBP • Max 5MB</p>
+                </div>
             )}
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/*"
+            />
         </div>
     );
 }

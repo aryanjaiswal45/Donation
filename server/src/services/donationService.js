@@ -24,10 +24,40 @@ exports.getDonations = async (filters, role, userId) => {
     }
 
     const donations = await Donation.find(query)
+        .select('-image.data')
         .populate('donorId', 'name email phone')
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .lean();
 
-    return donations;
+    // Debug log to see what the data looks like (safe to remove after fixing)
+    if (donations.length > 0) {
+        console.log('🔍 First donation sample:', {
+            id: donations[0]._id,
+            foodName: donations[0].foodName,
+            hasImageField: !!donations[0].image,
+            contentType: donations[0].image?.contentType,
+            legacyUrl: donations[0].imageUrl
+        });
+    }
+
+    // Add a hasImage flag so frontend knows whether an image exists
+    const donationsWithFlag = donations.map((d) => {
+        // Safe check for binary image
+        const hasBinaryImage = !!(d.image && d.image.contentType);
+        
+        // Safe check for legacy image (handling null/undefined/empty)
+        const hasLegacyImage = !!(d.imageUrl && typeof d.imageUrl === 'string' && d.imageUrl.trim() !== '');
+
+        return {
+            ...d,
+            hasImage: hasBinaryImage || hasLegacyImage,
+        };
+    });
+
+    // Logging summarized results for debugging
+    console.log(`📡 Returning ${donationsWithFlag.length} donations. Images found: ${donationsWithFlag.filter(d => d.hasImage).length}`);
+
+    return donationsWithFlag;
 };
 
 exports.updateDonationStatus = async (id, status) => {
