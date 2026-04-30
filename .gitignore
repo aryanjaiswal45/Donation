@@ -10,3 +10,4 @@ client/.env*.local
 server/node_modules/
 server/.env
 server/uploads/
+server/node_modules
